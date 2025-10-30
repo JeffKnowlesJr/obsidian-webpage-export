@@ -1,6 +1,6 @@
 import { Notice, TFile, TFolder } from "obsidian";
 import { Path } from "src/plugin/utils/path";
-import { ExportPreset, Settings, SettingsPage } from "src/plugin/settings/settings";
+import { Settings, SettingsPage } from "src/plugin/settings/settings";
 import { Utils } from "src/plugin/utils/utils";
 import { Website } from "src/plugin/website/website";
 import { ExportLog, MarkdownRendererAPI } from "src/plugin/render-api/render-api";
@@ -96,11 +96,9 @@ export class HTMLExporter
 					await Utils.downloadAttachments(website.index.newFiles.filter((f) => !(f instanceof Webpage)));
 					await Utils.downloadAttachments(website.index.updatedFiles.filter((f) => !(f instanceof Webpage)));
 
-					if (Settings.exportPreset != ExportPreset.RawDocuments)
-					{
-						await Utils.downloadAttachments([website.index.websiteDataAttachment()]);
-						await Utils.downloadAttachments([website.index.indexDataAttachment()]);
-					}
+					// Always include website data for web-optimized exports
+					await Utils.downloadAttachments([website.index.websiteDataAttachment()]);
+					await Utils.downloadAttachments([website.index.indexDataAttachment()]);
 				}
 			}
 		}

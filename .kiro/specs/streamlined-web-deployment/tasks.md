@@ -2,85 +2,133 @@
 
 ## Phase 1: Core Simplification
 
-- [ ] 1. Create simplified export manager
+- [x] 1. Create simplified export manager
+
+
+
+
   - Create new `WebExportManager` class to replace complex `HTMLExporter`
   - Implement single web-optimized export mode
   - Remove export preset selection logic (Online/Local/Raw Documents)
   - _Requirements: 1.1, 1.2, 1.3, 7.1_
 
-- [ ] 1.1 Implement WebExportManager class
+- [x] 1.1 Implement WebExportManager class
+
+
   - Create `src/plugin/web-export/web-export-manager.ts`
   - Define core export orchestration methods
   - Implement vault validation and error handling
   - _Requirements: 1.1, 6.2_
 
+
+
 - [ ] 1.2 Remove export mode complexity
   - Delete export preset enums and related logic from settings
   - Remove `ExportPreset.Online`, `ExportPreset.Local`, `ExportPreset.RawDocuments`
   - Update main plugin to use single export path
+
+
   - _Requirements: 1.2, 7.1_
 
-- [ ] 1.3 Implement web-optimized defaults
+- [x] 1.3 Implement web-optimized defaults
+
+
+
   - Set default configuration for web publishing (external assets, slugified URLs)
   - Enable all interactive features by default (search, graph, navigation, theme toggle)
   - Remove individual feature toggles from main interface
   - _Requirements: 1.4, 4.1_
 
+
+
 - [ ] 2. Simplify settings interface
+
   - Create new simplified settings panel with maximum 10 options
   - Group settings into logical sections (Site Info, Features, Advanced)
+
+
   - Hide technical options from main interface
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 2.1 Create simplified settings schema
+- [x] 2.1 Create simplified settings schema
+
+
   - Define `WebConfig` interface with essential settings only
   - Create site information fields (name, description, URL)
   - Define feature toggles for main interactive components
+
+
+
+
   - _Requirements: 2.1, 2.2_
 
 - [ ] 2.2 Implement new settings UI components
   - Create simplified settings panel in `src/plugin/settings/web-settings.ts`
   - Implement tabbed interface (Basic, SEO, Advanced)
+
+
   - Hide advanced options behind toggle or separate tab
   - _Requirements: 2.3, 2.4, 2.5_
 
-- [ ] 2.3 Remove deprecated settings options
+- [x] 2.3 Remove deprecated settings options
+
+
   - Remove asset inlining toggles from main interface
   - Remove CSS and JavaScript processing options
   - Remove plugin-specific style inclusion options
   - _Requirements: 7.2, 7.3, 7.5_
 
-- [ ] 3. Update main plugin integration
+- [x] 3. Update main plugin integration
+
+
+
+
+
+
   - Modify main plugin class to use WebExportManager
   - Update ribbon icon and command handlers
   - Simplify export modal to focus on file selection and destination
   - _Requirements: 1.1, 2.1_
 
-- [ ] 3.1 Update plugin main class
+- [x] 3.1 Update plugin main class
+
+
   - Modify `src/plugin/main.ts` to use WebExportManager instead of HTMLExporter
   - Update command registrations for simplified workflow
   - Remove complex export mode selection logic
   - _Requirements: 1.1_
 
-- [ ] 3.2 Simplify export modal
+- [x] 3.2 Simplify export modal
+
+
   - Update `ExportModal` to remove export preset selection
   - Focus on essential options: files to export and destination
   - Add quick validation and helpful error messages
   - _Requirements: 2.1, 6.3_
 
+
+
+
 ## Phase 2: Docker Enhancement
 
 - [ ] 4. Enhance Docker integration
+
   - Implement environment variable configuration for all essential settings
   - Add vault validation before export begins
+
+
   - Provide structured logging output for CI/CD monitoring
   - _Requirements: 3.1, 3.2, 6.1, 6.2, 6.3_
 
-- [ ] 4.1 Implement environment variable configuration
+- [x] 4.1 Implement environment variable configuration
+
+
   - Create `DockerConfigLoader` class to read environment variables
   - Map environment variables to WebConfig properties
   - Support all essential settings via environment variables
   - _Requirements: 6.1_
+
+
 
 - [ ] 4.2 Add comprehensive vault validation
   - Implement `VaultValidator` class with detailed checks
@@ -88,7 +136,11 @@
   - Check for common configuration issues and provide solutions
   - _Requirements: 3.4, 6.2_
 
-- [ ] 4.3 Improve Docker logging and monitoring
+- [x] 4.3 Improve Docker logging and monitoring
+
+
+
+
   - Implement structured logging with different levels (info, warn, error)
   - Add progress indicators for long-running operations
   - Provide clear error messages with troubleshooting steps
@@ -101,6 +153,7 @@
   - _Requirements: 3.5, 6.5, 6.6_
 
 - [ ] 5.1 Optimize Docker image
+
   - Review and minimize Docker image layers
   - Remove unnecessary dependencies and files
   - Implement multi-stage build optimizations
@@ -119,6 +172,8 @@
   - _Requirements: 6.5_
 
 - [ ] 6. Generate GitHub Actions templates
+
+
   - Create pre-built GitHub Actions workflow templates
   - Include common deployment scenarios (GitHub Pages, Netlify, Vercel)
   - Provide configuration examples for different use cases

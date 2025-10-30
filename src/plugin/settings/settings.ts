@@ -15,12 +15,7 @@ import safeParser from 'postcss-safe-parser';
 
 // #region Settings Definition
 
-export enum ExportPreset
-{
-	Online = "online",
-	Local = "local",
-	RawDocuments = "raw-documents",
-}
+// Export presets removed - using single web-optimized mode
 
 export enum LogLevel
 {
@@ -42,15 +37,21 @@ export class Settings
 	public static rssDateProperty: string = "date";
 	public static onlyExportModified: boolean = true;
 	public static deleteOldFiles: boolean = true;
-	public static exportPreset: ExportPreset = ExportPreset.Online;
+	// exportPreset removed - using single web-optimized mode
 	public static openAfterExport: boolean = true;
 
 	// Graph View Settings
 	public static filePickerBlacklist: string[] = ["(^|\\/)node_modules\\/","(^|\\/)dist\\/","(^|\\/)dist-ssr\\/","(^|\\/)\\.vscode\\/"]; // ignore node_modules, dist, and .vscode
 	public static filePickerWhitelist: string[] = ["\\.\\w+$"]; // only include files with extensions
 
-	public static async onlinePreset()
+	/**
+	 * Apply web-optimized defaults for streamlined deployment
+	 * Removes complex asset inlining options and uses web-friendly defaults
+	 */
+	public static async applyWebOptimizedDefaults()
 	{
+		// External assets for web deployment (CDN-ready structure)
+		// Asset inlining options removed - always use external assets for web optimization
 		Settings.exportOptions.inlineCSS = false;
 		Settings.exportOptions.inlineFonts = false;
 		Settings.exportOptions.inlineHTML = false;
@@ -58,48 +59,54 @@ export class Settings
 		Settings.exportOptions.inlineMedia = false;
 		Settings.exportOptions.inlineOther = false;
 
+		// Web-friendly URLs and structure
 		Settings.exportOptions.slugifyPaths = true;
+		Settings.exportOptions.combineAsSingleFile = false;
+		Settings.exportOptions.fixLinks = true;
+		Settings.exportOptions.flattenExportPaths = false;
+
+		// Include essential web assets (no longer configurable - always enabled for web)
+		Settings.exportOptions.includeJS = true;
+		Settings.exportOptions.includeCSS = true;
+		Settings.exportOptions.addHeadTag = true;
+		Settings.exportOptions.addBodyClasses = true;
+		Settings.exportOptions.addMathjaxStyles = true;
+
+		// Enable all interactive features by default for rich web experience
 		Settings.exportOptions.graphViewOptions.setAvailable(true);
 		Settings.exportOptions.fileNavigationOptions.setAvailable(true);
 		Settings.exportOptions.searchOptions.setAvailable(true);
 		Settings.exportOptions.rssOptions.setAvailable(true);
-		Settings.exportOptions.combineAsSingleFile = false;
+		Settings.exportOptions.themeToggleOptions.setAvailable(true);
+		Settings.exportOptions.outlineOptions.setAvailable(true);
+		Settings.exportOptions.backlinkOptions.setAvailable(true);
+		Settings.exportOptions.tagOptions.setAvailable(true);
+		Settings.exportOptions.aliasOptions.setAvailable(true);
+		Settings.exportOptions.sidebarOptions.setAvailable(true);
+		Settings.exportOptions.linkPreviewOptions.setAvailable(true);
 
-		await SettingsPage.saveSettings();
-	}
+		// Enable all features by default (not just available, but enabled)
+		Settings.exportOptions.graphViewOptions.enabled = true;
+		Settings.exportOptions.fileNavigationOptions.enabled = true;
+		Settings.exportOptions.searchOptions.enabled = true;
+		Settings.exportOptions.themeToggleOptions.enabled = true;
+		Settings.exportOptions.outlineOptions.enabled = true;
+		Settings.exportOptions.backlinkOptions.enabled = true;
+		Settings.exportOptions.tagOptions.enabled = true;
+		Settings.exportOptions.sidebarOptions.enabled = true;
 
-	public static async localPreset()
-	{
-		Settings.exportOptions.inlineCSS = true;
-		Settings.exportOptions.inlineFonts = true;
-		Settings.exportOptions.inlineHTML = false;
-		Settings.exportOptions.inlineJS = true;
-		Settings.exportOptions.inlineMedia = true;
-		Settings.exportOptions.inlineOther = true;
-		Settings.exportOptions.slugifyPaths = true;
-		Settings.exportOptions.graphViewOptions.setAvailable(true);
-		Settings.exportOptions.fileNavigationOptions.setAvailable(true);
-		Settings.exportOptions.searchOptions.setAvailable(false);
-		Settings.exportOptions.rssOptions.setAvailable(false);
-		Settings.exportOptions.combineAsSingleFile = true;
+		// Web optimization settings
+		Settings.exportOptions.relativeHeaderLinks = false; // Use absolute links for better web compatibility
+		Settings.exportOptions.offlineResources = false; // Allow external resources for web deployment
 
-		await SettingsPage.saveSettings();
-	}
+		// Set default site name if not already set
+		if (!Settings.exportOptions.siteName || Settings.exportOptions.siteName === '') {
+			Settings.exportOptions.siteName = app?.vault?.getName() ?? 'My Digital Garden';
+		}
 
-	public static async rawDocumentsPreset()
-	{
-		Settings.exportOptions.inlineCSS = true;
-		Settings.exportOptions.inlineFonts = true;
-		Settings.exportOptions.inlineHTML = true;
-		Settings.exportOptions.inlineJS = true;
-		Settings.exportOptions.inlineMedia = true;
-		Settings.exportOptions.inlineOther = true;
-		Settings.exportOptions.slugifyPaths = false;
-		Settings.exportOptions.graphViewOptions.setAvailable(false);
-		Settings.exportOptions.fileNavigationOptions.setAvailable(false);
-		Settings.exportOptions.searchOptions.setAvailable(false);
-		Settings.exportOptions.rssOptions.setAvailable(false);
-		Settings.exportOptions.combineAsSingleFile = false;
+		// Mark deprecated settings as hidden from main interface
+		// Plugin-specific CSS inclusion is now handled automatically
+		// Complex asset processing options are removed from user control
 
 		await SettingsPage.saveSettings();
 	}
@@ -153,6 +160,26 @@ export class SettingsPage extends PluginSettingTab
 		header.style.display = 'block';
 		header.style.marginBottom = '15px';
 
+		// Migration notice for existing users
+		const migrationNotice = container.createEl('div', { cls: 'setting-item-description' });
+		migrationNotice.style.marginBottom = '20px';
+		migrationNotice.style.padding = '15px';
+		migrationNotice.style.backgroundColor = 'var(--background-secondary)';
+		migrationNotice.style.borderRadius = '5px';
+		migrationNotice.style.border = '1px solid var(--interactive-accent)';
+		migrationNotice.innerHTML = `
+			<strong>🚀 Simplified Web Export</strong><br>
+			This plugin has been streamlined for web deployment. Complex export modes and technical options have been removed in favor of web-optimized defaults.
+			<br><br>
+			<strong>What's changed:</strong>
+			<ul style="margin: 10px 0; padding-left: 20px;">
+				<li>Single web-optimized export mode (no more Online/Local/Raw Documents)</li>
+				<li>All interactive features enabled by default</li>
+				<li>Simplified settings with essential options only</li>
+				<li>Advanced options moved to separate sections</li>
+			</ul>
+		`;
+
 		const supportContainer = container.createDiv();
 		supportContainer.style.marginBottom = '15px';
 		const supportLink = container.createEl('a');
@@ -190,44 +217,49 @@ export class SettingsPage extends PluginSettingTab
 
 		// #endregion
 
-		// #region Page Features
+		// #region Web-Optimized Features (Simplified Interface)
 
 		createDivider(container);
 		
-		let section = createSection(container, lang.pageFeatures.title, lang.pageFeatures.description);
+		let section = createSection(container, "Web Features", "All interactive features are enabled by default for optimal web experience.");
 		
-		createFeatureSetting(section, lang.document.title, 			Settings.exportOptions.documentOptions,			lang.document.description,
-			(container) =>
-			{
-				createToggle(container, lang.addPageIcon.title,
-					() => Settings.exportOptions.addPageIcon,
-					(value) => Settings.exportOptions.addPageIcon = value,
-					lang.addPageIcon.description);
-			}
-		);
+		// Show a simple summary of enabled features instead of individual toggles
+		const enabledFeatures = [
+			"🔍 Full-text search",
+			"🗂️ File navigation",
+			"📋 Document outline", 
+			"🕸️ Interactive graph view",
+			"🎨 Theme toggle",
+			"🔗 Backlinks",
+			"🏷️ Tags",
+			"📄 Sidebars"
+		];
 
+		const featuresList = section.createEl('div', { cls: 'setting-item-description' });
+		featuresList.style.marginBottom = '1em';
+		featuresList.style.padding = '10px';
+		featuresList.style.backgroundColor = 'var(--background-secondary)';
+		featuresList.style.borderRadius = '5px';
+		featuresList.innerHTML = `<strong>Enabled Features:</strong><br>${enabledFeatures.join('<br>')}`;
 
-		createFeatureSetting(section, lang.sidebars.title, 			Settings.exportOptions.sidebarOptions,			lang.sidebars.description);
-		createFeatureSetting(section, lang.fileNavigation.title,	Settings.exportOptions.fileNavigationOptions,	lang.fileNavigation.description);
-		createFeatureSetting(section, lang.outline.title,			Settings.exportOptions.outlineOptions,			lang.outline.description);
-		createFeatureSetting(section, lang.graphView.title, 		Settings.exportOptions.graphViewOptions,		lang.graphView.description);
-		createFeatureSetting(section, lang.search.title,			Settings.exportOptions.searchOptions,			lang.search.description);
-		createFeatureSetting(section, lang.linkPreview.title,		Settings.exportOptions.linkPreviewOptions,		lang.linkPreview.description);
-		createFeatureSetting(section, lang.themeToggle.title,		Settings.exportOptions.themeToggleOptions,		lang.themeToggle.description);
-		createFeatureSetting(section, lang.customHead.title,		Settings.exportOptions.customHeadOptions,		lang.customHead.description);
-		createFeatureSetting(section, lang.backlinks.title,			Settings.exportOptions.backlinkOptions,			lang.backlinks.description);
-		createFeatureSetting(section, lang.tags.title,				Settings.exportOptions.tagOptions,				lang.tags.description);
-		createFeatureSetting(section, lang.aliases.title,			Settings.exportOptions.aliasOptions,			lang.aliases.description);
-		// createFeatureSetting(section, lang.properties.title,		Settings.exportOptions.propertiesOptions,		lang.properties.description);
-		createFeatureSetting(section, lang.rss.title,				Settings.exportOptions.rssOptions,				lang.rss.description);
+		// Note about advanced configuration
+		const advancedNote = section.createEl('div', { cls: 'setting-item-description' });
+		advancedNote.style.marginTop = '1em';
+		advancedNote.style.fontStyle = 'italic';
+		advancedNote.innerHTML = `<strong>Need more control?</strong> Individual feature toggles and advanced options are available in the sections below.`;
 
 		// #endregion
 
-		// #region General Site Settings
+		// #region Essential Site Settings (Simplified)
 
 		createDivider(container);
-		section = createSection(container, lang.generalSettingsSection.title, lang.generalSettingsSection.description);
+		section = createSection(container, "Site Information", "Essential information for your published website.");
 		
+		createText(section, lang.siteName.title, 
+			() => Settings.exportOptions.siteName,
+			(value) => Settings.exportOptions.siteName = value,
+			lang.siteName.description);
+
 		createFileInput(section,
 			() => Settings.exportOptions.faviconPath,
 			(value) => Settings.exportOptions.faviconPath = value,
@@ -249,128 +281,117 @@ export class SettingsPage extends PluginSettingTab
 				browseButton: true,
 			});
 
-		createText(section, lang.siteName.title, 
-			() => Settings.exportOptions.siteName,
-			(value) => Settings.exportOptions.siteName = value,
-			lang.siteName.description);
-
 		// #endregion
 
-		//#region Style Settings
+		// #region Essential Export Settings (Simplified)
 
 		createDivider(container);
-
-		section = createSection(container, lang.styleOptionsSection.title,
-			lang.styleOptionsSection.description);
-
-		createDropdown(section, lang.iconEmojiStyle.title,
-			() => Settings.exportOptions.iconEmojiStyle,
-			(value) => Settings.exportOptions.iconEmojiStyle = value as EmojiStyle,
-			EmojiStyle, 
-			lang.iconEmojiStyle.description);
-
-		createDropdown(section, lang.themeName.title,
-			// @ts-ignore
-			() => Settings.exportOptions.themeName || app.vault?.config?.cssTheme || "Default",
-			(value) => Settings.exportOptions.themeName = value,
-			this.getInstalledThemesRecord(),
-			lang.themeName.description);
-	
-		new Setting(section)
-			.setName(lang.includeStyleCssIds.title)
-			.setDesc(lang.includeStyleCssIds.description)
-
-		const styleIdsList = new FlowList();
-		styleIdsList.generate(section);
-		this.getStyleTagIds().forEach(async (plugin) => 
-		{
-			if (supportedStyleIds.ids.contains(plugin) || supportedStyleIds.ignoreIds.contains(plugin)) return;
-
-			const isChecked = Settings.exportOptions.includeStyleCssIds.contains(plugin);
-
-			styleIdsList.addItem(plugin, plugin, isChecked, (value) => {
-				Settings.exportOptions.includeStyleCssIds = styleIdsList.checkedList;
-				SettingsPage.saveSettings();
-			});
-		});
-
-		new Setting(section)
-			.setName(lang.includePluginCSS.title)
-			.setDesc(lang.includePluginCSS.description)
-
-		const pluginsList = new FlowList();
-		styleIdsList.generate(section);
-		this.getPluginIDs().forEach(async (plugin) => 
-		{
-			//@ts-ignore
-			const pluginManifest = app.plugins.manifests[plugin];
-			if (!pluginManifest) return;
-
-			if ((await this.getBlacklistedPluginIDs()).contains(pluginManifest.id)) {
-				return;
-			}
-
-			const pluginDir = pluginManifest.dir;
-			if (!pluginDir) return;
-			const pluginPath = new Path(pluginDir);
-
-			const hasCSS = pluginPath.joinString('styles.css').exists;
-			if (!hasCSS) return;
-
-			const isChecked = Settings.exportOptions.includePluginCss.contains(plugin);
-
-			styleIdsList.addItem(pluginManifest.name, plugin, isChecked, (value) => {
-				Settings.exportOptions.includePluginCss = styleIdsList.checkedList;
-				SettingsPage.saveSettings();
-			});
-		});
-
-
-
-		//#endregion
-	
-		//#region Export Settings
-
-		createDivider(container);
-
-		section = createSection(container, lang.exportSettingsSection.title,
-			lang.exportSettingsSection.description);
-
-		createToggle(section, lang.relativeHeaderLinks.title, 
-			() => Settings.exportOptions.relativeHeaderLinks, 
-			(value) => Settings.exportOptions.relativeHeaderLinks = value, 
-			lang.relativeHeaderLinks.description);
+		section = createSection(container, "Web Optimization", "Pre-configured settings for optimal web deployment.");
 
 		createToggle(section, lang.slugifyPaths.title,
 			() => Settings.exportOptions.slugifyPaths,
 			(value) => Settings.exportOptions.slugifyPaths = value,
 			lang.slugifyPaths.description);
 
-		createToggle(section, lang.makeOfflineCompatible.title,
+		// #endregion
+
+		// #region Advanced Feature Configuration (Collapsed by default)
+
+		createDivider(container);
+		const advancedSection = createSection(container, "Advanced Feature Configuration", "Individual feature toggles for fine-tuning. Most users can skip this section.");
+		
+		// Make this section collapsed by default
+		const advancedDetails = advancedSection as HTMLDetailsElement;
+		advancedDetails.open = false;
+
+		createFeatureSetting(advancedSection, lang.search.title, Settings.exportOptions.searchOptions, lang.search.description);
+		createFeatureSetting(advancedSection, lang.fileNavigation.title, Settings.exportOptions.fileNavigationOptions, lang.fileNavigation.description);
+		createFeatureSetting(advancedSection, lang.outline.title, Settings.exportOptions.outlineOptions, lang.outline.description);
+		createFeatureSetting(advancedSection, lang.graphView.title, Settings.exportOptions.graphViewOptions, lang.graphView.description);
+		createFeatureSetting(advancedSection, lang.themeToggle.title, Settings.exportOptions.themeToggleOptions, lang.themeToggle.description);
+		createFeatureSetting(advancedSection, lang.backlinks.title, Settings.exportOptions.backlinkOptions, lang.backlinks.description);
+		createFeatureSetting(advancedSection, lang.tags.title, Settings.exportOptions.tagOptions, lang.tags.description);
+		createFeatureSetting(advancedSection, lang.sidebars.title, Settings.exportOptions.sidebarOptions, lang.sidebars.description);
+
+		// #endregion
+
+		// #region Advanced Technical Settings (Collapsed by default)
+
+		createDivider(container);
+		const technicalSection = createSection(container, "Advanced Technical Settings", "Technical options for advanced users. Default values are optimized for web deployment.");
+		
+		// Make this section collapsed by default
+		const technicalDetails = technicalSection as HTMLDetailsElement;
+		technicalDetails.open = false;
+
+		// Theme selection (moved to advanced)
+		createDropdown(technicalSection, lang.themeName.title,
+			// @ts-ignore
+			() => Settings.exportOptions.themeName || app.vault?.config?.cssTheme || "Default",
+			(value) => Settings.exportOptions.themeName = value,
+			this.getInstalledThemesRecord(),
+			lang.themeName.description);
+
+		createToggle(technicalSection, lang.relativeHeaderLinks.title, 
+			() => Settings.exportOptions.relativeHeaderLinks, 
+			(value) => Settings.exportOptions.relativeHeaderLinks = value, 
+			lang.relativeHeaderLinks.description);
+
+		createToggle(technicalSection, lang.makeOfflineCompatible.title,
 			() => Settings.exportOptions.offlineResources,
 			(value) => Settings.exportOptions.offlineResources = value,
 			lang.makeOfflineCompatible.description);
 
-		// #endregion
-
-		// #region Obsidian Settings
-
-		createDivider(container);
-
-		section = createSection(container, lang.obsidianSettingsSection.title,
-			lang.obsidianSettingsSection.description);
-		
-		createDropdown(section, lang.logLevel.title,
+		createDropdown(technicalSection, lang.logLevel.title,
 			() => Settings.logLevel,
 			(value) => Settings.logLevel = value as LogLevel,
 			LogLevel,
 			lang.logLevel.description);
 
-		createText(section, lang.titleProperty.title,
+		createText(technicalSection, lang.titleProperty.title,
 			() => Settings.titleProperty,
 			(value) => Settings.titleProperty = value,
 			lang.titleProperty.description);
+
+		// #endregion
+
+		// #region Legacy Style Settings (Collapsed and marked as deprecated)
+
+		createDivider(container);
+		const legacySection = createSection(container, "Legacy Style Settings (Deprecated)", "These settings are deprecated and will be removed in future versions. They are hidden by default.");
 		
+		// Make this section collapsed by default
+		const legacyDetails = legacySection as HTMLDetailsElement;
+		legacyDetails.open = false;
+
+		// Add deprecation warning
+		const deprecationWarning = legacySection.createEl('div', { cls: 'setting-item-description' });
+		deprecationWarning.style.marginBottom = '15px';
+		deprecationWarning.style.padding = '10px';
+		deprecationWarning.style.backgroundColor = 'var(--background-modifier-error)';
+		deprecationWarning.style.borderRadius = '5px';
+		deprecationWarning.style.color = 'var(--text-on-accent)';
+		deprecationWarning.innerHTML = `
+			<strong>⚠️ Deprecated Settings</strong><br>
+			These settings are no longer recommended and may be removed in future versions. 
+			The plugin now uses web-optimized defaults for better performance and compatibility.
+		`;
+
+		createDropdown(legacySection, lang.iconEmojiStyle.title,
+			() => Settings.exportOptions.iconEmojiStyle,
+			(value) => Settings.exportOptions.iconEmojiStyle = value as EmojiStyle,
+			EmojiStyle, 
+			lang.iconEmojiStyle.description + " (Deprecated)");
+
+		// Simplified style settings (removed complex plugin CSS management)
+		const styleNote = legacySection.createEl('div', { cls: 'setting-item-description' });
+		styleNote.style.marginTop = '15px';
+		styleNote.style.fontStyle = 'italic';
+		styleNote.innerHTML = `
+			<strong>Note:</strong> Complex plugin CSS and style ID management has been removed. 
+			The plugin now automatically includes essential styles for web deployment.
+		`;
+
 		// #endregion
 	}
 
@@ -637,6 +658,17 @@ export class SettingsPage extends PluginSettingTab
 		SettingsPage.deepAssign(Settings, loadedSettings);
 		// Reconstruct feature option instances to preserve constructor-set properties
 		Settings.exportOptions.reconstructFeatureOptions();
+		
+		// Apply web-optimized defaults for new installations or when upgrading
+		const isNewInstallation = !loadedSettings || Object.keys(loadedSettings).length === 0;
+		const needsWebOptimization = isNewInstallation || !loadedSettings.webOptimizedApplied;
+		
+		if (needsWebOptimization) {
+			await Settings.applyWebOptimizedDefaults();
+			// Mark that web optimization has been applied
+			(Settings as any).webOptimizedApplied = true;
+		}
+		
 		SettingsPage.saveSettings();
 		SettingsPage.loaded = true;
 	}

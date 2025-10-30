@@ -4,8 +4,9 @@ import { Notice, Plugin, TFile, TFolder, requestUrl,moment, MarkdownPreviewRende
 // modules that are part of the plugin
 import { AssetHandler } from 'src/plugin/asset-loaders/asset-handler';
 import { Settings, SettingsPage } from 'src/plugin/settings/settings';
-import { HTMLExporter } from 'src/plugin/exporter';
+import { WebExportManager } from 'src/plugin/web-export/web-export-manager';
 import { Path } from 'src/plugin/utils/path';
+import { Utils } from 'src/plugin/utils/utils';
 import { ExportModal } from 'src/plugin/settings/export-modal';
 import { _MarkdownRendererInternal, ExportLog, MarkdownRendererAPI } from 'src/plugin/render-api/render-api';
 import { DataviewRenderer } from './render-api/dataview-renderer';
@@ -36,11 +37,70 @@ export default class HTMLExportPlugin extends Plugin {
 	public Website = Website;
 
 	public async exportDocker() {
-		await HTMLExporter.export(true, undefined, new Path("/output"));
+		await WebExportManager.exportVault(new Path("/output"), true, true);
 	}
 
 	public async exportVault(path: string) {
-		await HTMLExporter.exportVault(new Path(path), true, false);
+		await WebExportManager.exportVault(new Path(path), true, false);
+	}
+
+	/**
+	 * Open the simplified web export modal
+	 */
+	private async openWebExportModal() {
+		const modal = new ExportModal();
+		const result = await modal.open();
+		
+		if (!result.canceled && result.validPath) {
+			const website = await WebExportManager.exportFiles(
+				result.pickedFiles, 
+				result.exportPath, 
+				true, 
+				Settings.deleteOldFiles
+			);
+			
+			if (website && Settings.openAfterExport) {
+				Utils.openPath(result.exportPath);
+			}
+		}
+	}
+
+	/**
+	 * Export entire vault using web-optimized settings
+	 */
+	private async exportEntireVault() {
+		const exportPath = new Path(Settings.exportOptions.exportPath);
+		
+		if (!exportPath.exists || !exportPath.isAbsolute || !exportPath.isDirectory) {
+			new Notice("Please set a valid export path in settings first.", 5000);
+			this.openWebExportModal();
+			return;
+		}
+
+		const website = await WebExportManager.exportVault(exportPath, true, Settings.deleteOldFiles);
+		
+		if (website && Settings.openAfterExport) {
+			Utils.openPath(exportPath);
+		}
+	}
+
+	/**
+	 * Export specific files using web-optimized settings
+	 */
+	private async exportSpecificFiles(files: TFile[]) {
+		const exportPath = new Path(Settings.exportOptions.exportPath);
+		
+		if (!exportPath.exists || !exportPath.isAbsolute || !exportPath.isDirectory) {
+			new Notice("Please set a valid export path in settings first.", 5000);
+			this.openWebExportModal();
+			return;
+		}
+
+		const website = await WebExportManager.exportFiles(files, exportPath, true, Settings.deleteOldFiles);
+		
+		if (website && Settings.openAfterExport) {
+			Utils.openPath(exportPath);
+		}
 	}
 
 	async onload() {
@@ -55,8 +115,8 @@ export default class HTMLExportPlugin extends Plugin {
 		await SettingsPage.loadSettings();
 		await AssetHandler.initialize();
 
-		this.addRibbonIcon("folder-up", i18n.exportAsHTML, () => {
-			HTMLExporter.export(false);
+		this.addRibbonIcon("globe", "Export as Website", () => {
+			this.openWebExportModal();
 		});
 
 		// register callback for file rename so we can update the saved files to export
@@ -65,16 +125,24 @@ export default class HTMLExportPlugin extends Plugin {
 		);
 
 		this.addCommand({
-			id: "export-html-vault",
-			name: "Export using previous settings",
+			id: "export-website",
+			name: "Export as Website",
 			callback: () => {
-				HTMLExporter.export(true);
+				this.openWebExportModal();
 			},
 		});
 
 		this.addCommand({
-			id: "export-html-current",
-			name: "Export only current file using previous settings",
+			id: "export-vault-website",
+			name: "Export Entire Vault as Website",
+			callback: () => {
+				this.exportEntireVault();
+			},
+		});
+
+		this.addCommand({
+			id: "export-current-website",
+			name: "Export Current File as Website",
 			callback: () => {
 				const file = this.app.workspace.getActiveFile();
 
@@ -83,31 +151,19 @@ export default class HTMLExportPlugin extends Plugin {
 					return;
 				}
 
-				HTMLExporter.export(true, [file]);
-			},
-		});
-
-		this.addCommand({
-			id: "export-html-setting",
-			name: "Set html export settings",
-			callback: () => {
-				HTMLExporter.export(false);
+				this.exportSpecificFiles([file]);
 			},
 		});
 
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
 				menu.addItem((item) => {
-					item.setTitle(i18n.exportAsHTML)
-						.setIcon("download")
+					item.setTitle("Export as Website")
+						.setIcon("globe")
 						.setSection("export")
 						.onClick(() => {
-							ExportModal.title =
-								i18n.exportModal.exportAsTitle.format(
-									file.name
-								);
 							if (file instanceof TFile) {
-								HTMLExporter.export(false, [file]);
+								this.exportSpecificFiles([file]);
 							} else if (file instanceof TFolder) {
 								const filesInFolder = this.app.vault
 									.getFiles()
@@ -116,7 +172,7 @@ export default class HTMLExportPlugin extends Plugin {
 											f.path
 										).directory.path.startsWith(file.path)
 									);
-								HTMLExporter.export(false, filesInFolder);
+								this.exportSpecificFiles(filesInFolder);
 							} else {
 								ExportLog.error(
 									"File is not a TFile or TFolder! Invalid type: " +

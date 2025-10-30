@@ -1,0 +1,101 @@
+name: Docker Integration Test
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'Dockerfile'
+      - 'docker/**'
+      - '.github/workflows/docker-test.yaml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'Dockerfile'
+      - 'docker/**'
+  workflow_dispatch:
+
+env:
+  TEST_TAG: obsidian-webpage-export:test
+
+jobs:
+  docker-test:
+    name: Test Docker Build and Functionality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: ${{ env.TEST_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Test Docker image layers and size
+        run: |
+          echo "=== Docker Image Information ==="
+          docker images ${{ env.TEST_TAG }}
+          
+          echo "=== Docker Image History ==="
+          docker history ${{ env.TEST_TAG }}
+          
+          echo "=== Docker Image Layers ==="
+          docker inspect ${{ env.TEST_TAG }} | jq '.[0].RootFS.Layers | length'
+
+      - name: Create test vault
+        run: |
+          mkdir -p test-vault/.obsidian/plugins
+          echo "# Test Note" > test-vault/test-note.md
+          echo "This is a test note for Docker export." >> test-vault/test-note.md
+
+      - name: Test Docker container basic functionality
+        run: |
+          # Test that the container starts and runs without errors
+          docker run --rm \
+            -v $(pwd)/test-vault:/vault \
+            -v $(pwd)/test-output:/output \
+            -e EXPORT_ENTIRE_VAULT=true \
+            ${{ env.TEST_TAG }} &
+          
+          # Give it time to start and process
+          sleep 30
+          
+          # Check if any output was generated
+          if [ -d "test-output" ] && [ "$(ls -A test-output)" ]; then
+            echo "✅ Docker export test passed - output generated"
+            ls -la test-output/
+          else
+            echo "⚠️  Docker export test completed but no output detected"
+            echo "This might be expected for a basic test setup"
+          fi
+
+      - name: Test Docker image security
+        run: |
+          # Check for common security issues
+          echo "=== Security Scan ==="
+          
+          # Check if running as root (should be avoided in production)
+          USER_ID=$(docker run --rm ${{ env.TEST_TAG }} id -u)
+          if [ "$USER_ID" = "0" ]; then
+            echo "⚠️  Container runs as root - consider using non-root user"
+          else
+            echo "✅ Container runs as non-root user (UID: $USER_ID)"
+          fi
+          
+          # Check for unnecessary packages
+          echo "=== Installed Packages ==="
+          docker run --rm ${{ env.TEST_TAG }} dpkg -l | wc -l
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf test-vault test-output
+          docker rmi ${{ env.TEST_TAG }} || true

@@ -1,37 +1,73 @@
-# vscode
-.vscode 
-
-# Intellij
+# Development tools and IDEs
+.vscode/
+.idea/
 *.iml
-.idea
 
-# npm
-node_modules
+# Version control
+.git/
+.gitignore
 
-# Don't include the compiled main.js file in the repo.
-# They should be uploaded to GitHub releases instead.
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs (will be generated in container)
 main.js
-
-# Exclude sourcemaps
 *.map
+build/
+dist/
 
-# obsidian
-data.json
+# Documentation and non-essential files
+README.md
+docs/
+*.md
+LICENSE
 
-# Exclude macOS Finder (System Explorer) View States
+# Test files
+test/
+tests/
+*.test.*
+*.spec.*
+
+# Configuration files not needed in container
+.eslintrc*
+.editorconfig
+.npmrc
+tsconfig*.json
+eslint.config.mjs
+esbuild.config.mjs
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
+# Project specific
 webpage-html-export.zip
 app-styles.css
 webpage-html-export.code-workspace
-
 *.bat
-
-build
-dist
-
-
 todo.txt
-Dockerfile
 vault/
 output/
+data.json
+
+# CI/CD files
+.github/
+action.yml
+
+# Kiro files
+.kiro/
+
+# Version files
+versions.json
+version-bump.mjs
+
+# Docker files (except the one being built)
+docker-compose.yaml
